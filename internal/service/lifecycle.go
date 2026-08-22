@@ -85,6 +85,9 @@ func (v *Service) SetNetworkReady(ctx context.Context, networkID string) (model.
 	if err != nil {
 		return model.Network{}, err
 	}
+	if !network.Status.CanAddData() {
+		return model.Network{}, fmt.Errorf("network cannot be marked ready from status %s", network.Status)
+	}
 	points, err := v.s.Points(ctx, networkID)
 	if err != nil {
 		return model.Network{}, err
@@ -100,4 +103,30 @@ func (v *Service) SetNetworkReady(ctx context.Context, networkID string) (model.
 	}
 	network.Status = model.NetworkReady
 	return network, v.s.SaveNetwork(ctx, network)
+}
+
+func (v *Service) ArchiveNetwork(ctx context.Context, networkID string) (model.Network, error) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	network, err := v.s.Network(ctx, networkID)
+	if err != nil {
+		return model.Network{}, err
+	}
+	if !network.Status.CanArchive() {
+		return model.Network{}, fmt.Errorf("network cannot be archived from status %s", network.Status)
+	}
+	periods, err := v.s.Periods(ctx, networkID)
+	if err != nil {
+		return model.Network{}, err
+	}
+	for _, period := range periods {
+		if period.Status == model.PeriodRunning {
+			return model.Network{}, fmt.Errorf("network has a running observation period")
+		}
+	}
+	network.Status = model.NetworkArchived
+	if err := v.s.SaveNetwork(ctx, network); err != nil {
+		return model.Network{}, err
+	}
+	return network, nil
 }

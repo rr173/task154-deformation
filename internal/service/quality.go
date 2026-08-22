@@ -11,10 +11,14 @@ func (v *Service) markOutliers(ctx context.Context, observations []model.Observa
 		issueByID[issue.ObservationID] = issue
 	}
 	for _, observation := range observations {
-		if _, flagged := issueByID[observation.ID]; !flagged || observation.Status != model.ObservationValid {
+		issue, flagged := issueByID[observation.ID]
+		if !flagged {
 			continue
 		}
-		observation.Status = model.ObservationOutlier
+		observation.Residual = issue.Magnitude
+		if observation.Status == model.ObservationValid {
+			observation.Status = model.ObservationOutlier
+		}
 		if err := v.s.UpdateObservation(ctx, observation); err != nil {
 			return err
 		}
@@ -46,7 +50,7 @@ func classifyStoredIssues(result model.Result, observations []model.Observation)
 		if observation.Status != model.ObservationOutlier {
 			continue
 		}
-		magnitude := observation.Precision * 3
+		magnitude := observation.Residual
 		if magnitude > max {
 			max = magnitude
 		}

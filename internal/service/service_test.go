@@ -83,3 +83,26 @@ func TestImportRejectsPointFromAnotherNetwork(t *testing.T) {
 		t.Fatal("expected cross-network observation to be rejected")
 	}
 }
+
+func TestArchiveNetworkBlocksNewPointsAndPeriods(t *testing.T) {
+	db, err := store.Open(filepath.Join(t.TempDir(), "service.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	service := New(db)
+	ctx := context.Background()
+	network, err := service.CreateNetwork(ctx, "site")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.ArchiveNetwork(ctx, network.ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.AddPoint(ctx, model.Point{NetworkID: network.ID, Role: model.PointFixed}); err == nil {
+		t.Fatal("archived network accepted a new point")
+	}
+	if _, err := service.CreatePeriod(ctx, network.ID, time.Now()); err == nil {
+		t.Fatal("archived network accepted a new period")
+	}
+}

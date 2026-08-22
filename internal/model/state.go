@@ -30,6 +30,10 @@ func (s NetworkStatus) CanAddData() bool {
 	return s == NetworkDraft || s == NetworkReady
 }
 
+func (s NetworkStatus) CanArchive() bool {
+	return s == NetworkDraft || s == NetworkReady || s == NetworkPublished
+}
+
 func ValidateTransition(before, after PeriodStatus) error {
 	if before == after {
 		return nil

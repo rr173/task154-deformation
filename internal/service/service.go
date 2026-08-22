@@ -41,8 +41,16 @@ func (v *Service) AddPoint(ctx context.Context, p model.Point) (model.Point, err
 	if !network.Status.CanAddData() {
 		return p, fmt.Errorf("network does not accept new points")
 	}
+	if err := validatePointCoordinates(p); err != nil {
+		return p, err
+	}
 	if p.Role != model.PointFixed && p.Role != model.PointEstimated && p.Role != model.PointDisabled {
 		return p, fmt.Errorf("invalid point role")
+	}
+	if existing, err := v.s.Point(ctx, p.ID); err == nil {
+		return p, fmt.Errorf("point id %q already belongs to network %q", p.ID, existing.NetworkID)
+	} else if err != sql.ErrNoRows {
+		return p, fmt.Errorf("look up point %q: %w", p.ID, err)
 	}
 	if p.ValidFrom.IsZero() {
 		p.ValidFrom = v.now().UTC()
@@ -50,8 +58,12 @@ func (v *Service) AddPoint(ctx context.Context, p model.Point) (model.Point, err
 	return p, v.s.SavePoint(ctx, p)
 }
 func (v *Service) CreatePeriod(ctx context.Context, network string, at time.Time) (model.Period, error) {
-	if _, e := v.s.Network(ctx, network); e != nil {
+	networkValue, e := v.s.Network(ctx, network)
+	if e != nil {
 		return model.Period{}, e
+	}
+	if err := canCreatePeriod(networkValue); err != nil {
+		return model.Period{}, err
 	}
 	if at.IsZero() {
 		at = v.now()
@@ -62,9 +74,6 @@ func (v *Service) CreatePeriod(ctx context.Context, network string, at time.Time
 func (v *Service) Import(ctx context.Context, o model.Observation) (model.Observation, error) {
 	v.mu.Lock()
 	defer v.mu.Unlock()
-	if o.Distance <= 0 || o.Precision <= 0 {
-		return o, fmt.Errorf("distance and precision must be positive")
-	}
 	p, e := v.s.Period(ctx, o.PeriodID)
 	if e != nil {
 		return o, e
@@ -80,11 +89,8 @@ func (v *Service) Import(ctx context.Context, o model.Observation) (model.Observ
 	if e != nil {
 		return o, fmt.Errorf("target point: %w", e)
 	}
-	if from.NetworkID != p.NetworkID || to.NetworkID != p.NetworkID {
-		return o, fmt.Errorf("observation points must belong to the period network")
-	}
-	if from.ID == to.ID {
-		return o, fmt.Errorf("observation must connect two distinct points")
+	if err := validateObservationForPeriod(p, from, to, o); err != nil {
+		return o, err
 	}
 	if o.ID == "" {
 		o.ID = uuid.NewString()
@@ -184,6 +190,20 @@ func (v *Service) Publish(ctx context.Context, id string) (model.Result, error) 
 	return r, nil
 }
 func (v *Service) Compare(ctx context.Context, first, second string) ([]model.Compare, error) {
+	firstPeriod, e := v.s.Period(ctx, first)
+	if e != nil {
+		return nil, fmt.Errorf("first period unavailable: %w", e)
+	}
+	secondPeriod, e := v.s.Period(ctx, second)
+	if e != nil {
+		return nil, fmt.Errorf("second period unavailable: %w", e)
+	}
+	if firstPeriod.NetworkID != secondPeriod.NetworkID {
+		return nil, fmt.Errorf("periods belong to different observation networks")
+	}
+	if firstPeriod.Status != model.PeriodPublished || secondPeriod.Status != model.PeriodPublished {
+		return nil, fmt.Errorf("both periods must be published before comparison")
+	}
 	a, e := v.s.Results(ctx, first)
 	if e != nil || len(a) == 0 {
 		return nil, fmt.Errorf("first result unavailable")

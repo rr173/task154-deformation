@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 )
@@ -54,6 +55,14 @@ func (v PointInput) Validate() error {
 	}
 	switch v.Role {
 	case PointFixed, PointEstimated, PointDisabled:
+		for _, coordinate := range []float64{v.X, v.Y, v.Z} {
+			if math.IsNaN(coordinate) || math.IsInf(coordinate, 0) {
+				return fmt.Errorf("point coordinates must be finite")
+			}
+			if math.Abs(coordinate) > 100_000_000 {
+				return fmt.Errorf("point coordinates exceed supported range")
+			}
+		}
 		return nil
 	default:
 		return fmt.Errorf("unsupported point role %q", v.Role)
@@ -71,11 +80,17 @@ func (v ObservationInput) Validate() error {
 	if v.FromPoint == "" || v.ToPoint == "" || v.FromPoint == v.ToPoint {
 		return fmt.Errorf("observation must connect two distinct points")
 	}
+	if len(v.ID) > 80 || len(v.Source) > 160 {
+		return fmt.Errorf("observation id or source is too long")
+	}
 	if v.Distance <= 0 || v.Precision <= 0 {
 		return fmt.Errorf("distance and precision must be positive")
 	}
 	if v.Distance > 1_000_000 || v.Precision > 1000 {
 		return fmt.Errorf("observation values exceed supported range")
+	}
+	if math.IsNaN(v.Distance) || math.IsInf(v.Distance, 0) || math.IsNaN(v.Precision) || math.IsInf(v.Precision, 0) {
+		return fmt.Errorf("distance and precision must be finite")
 	}
 	return nil
 }

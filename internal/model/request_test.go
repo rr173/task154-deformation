@@ -1,6 +1,7 @@
 package model
 
 import (
+	"math"
 	"testing"
 	"time"
 )
@@ -24,5 +25,14 @@ func TestInputsAndTransitions(t *testing.T) {
 	when := (PeriodInput{}).Normalize(time.Date(2026, 8, 1, 0, 0, 0, 0, time.UTC))
 	if when.IsZero() {
 		t.Fatal("period time was not normalized")
+	}
+}
+
+func TestInputsRejectNonFiniteMeasurements(t *testing.T) {
+	if err := (PointInput{ID: "p", Role: PointEstimated, X: math.Inf(1)}).Validate(); err == nil {
+		t.Fatal("infinite point coordinate was accepted")
+	}
+	if err := (ObservationInput{FromPoint: "a", ToPoint: "b", Distance: math.NaN(), Precision: 0.1}).Validate(); err == nil {
+		t.Fatal("NaN observation distance was accepted")
 	}
 }

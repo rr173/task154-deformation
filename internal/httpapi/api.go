@@ -23,6 +23,7 @@ func (a *API) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/networks/{id}/points", a.points)
 	mux.HandleFunc("POST /v1/networks/{id}/points", a.point)
 	mux.HandleFunc("POST /v1/networks/{id}/ready", a.ready)
+	mux.HandleFunc("POST /v1/networks/{id}/archive", a.archive)
 	mux.HandleFunc("GET /v1/networks/{id}/periods", a.periods)
 	mux.HandleFunc("POST /v1/networks/{id}/periods", a.period)
 	mux.HandleFunc("GET /v1/periods/{id}", a.periodDetail)
@@ -143,6 +144,15 @@ func (a *API) point(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) ready(w http.ResponseWriter, r *http.Request) {
 	value, err := a.S.SetNetworkReady(r.Context(), r.PathValue("id"))
+	if err != nil {
+		writeError(w, http.StatusBadRequest, err)
+		return
+	}
+	write(w, value)
+}
+
+func (a *API) archive(w http.ResponseWriter, r *http.Request) {
+	value, err := a.S.ArchiveNetwork(r.Context(), r.PathValue("id"))
 	if err != nil {
 		writeError(w, http.StatusBadRequest, err)
 		return

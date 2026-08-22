@@ -41,4 +41,8 @@ func TestWorkflowAPI(t *testing.T) {
 	if result["ObservationCount"].(float64) != 1 {
 		t.Fatal(result)
 	}
+	archived := request(http.MethodPost, "/v1/networks/"+networkID+"/archive", "")
+	if archived["Status"] != "archived" {
+		t.Fatal(archived)
+	}
 }
