@@ -72,11 +72,19 @@ func (v *Service) Import(ctx context.Context, o model.Observation) (model.Observ
 	if !p.Status.CanAcceptObservation() {
 		return o, fmt.Errorf("published period is immutable")
 	}
-	if _, e := v.s.Point(ctx, o.FromPoint); e != nil {
+	from, e := v.s.Point(ctx, o.FromPoint)
+	if e != nil {
 		return o, fmt.Errorf("source point: %w", e)
 	}
-	if _, e := v.s.Point(ctx, o.ToPoint); e != nil {
+	to, e := v.s.Point(ctx, o.ToPoint)
+	if e != nil {
 		return o, fmt.Errorf("target point: %w", e)
+	}
+	if from.NetworkID != p.NetworkID || to.NetworkID != p.NetworkID {
+		return o, fmt.Errorf("observation points must belong to the period network")
+	}
+	if from.ID == to.ID {
+		return o, fmt.Errorf("observation must connect two distinct points")
 	}
 	if o.ID == "" {
 		o.ID = uuid.NewString()

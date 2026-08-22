@@ -1,8 +1,14 @@
 #!/bin/bash
-set -euo pipefail
+set -e
 
-image_name=${1:-deformation-network}
-platform=${2:-linux/amd64}
+IMAGE_NAME=${1:-my-project}
+DOCKER_PLATFORM=${2:-linux/amd64}
 
-docker buildx build --platform "$platform" --load -f benzhi.Dockerfile -t "$image_name" .
-docker run --rm "$image_name" --smoke-test
+docker build --platform "$DOCKER_PLATFORM" -f benzhi.Dockerfile -t "$IMAGE_NAME" .
+
+echo ""
+echo "✅ Docker image '$IMAGE_NAME' built successfully!"
+echo ""
+echo "📋 Next steps (for testing):"
+echo "  • Interactive shell：docker run -it $IMAGE_NAME:latest"
+echo ""

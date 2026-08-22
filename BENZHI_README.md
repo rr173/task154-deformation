@@ -10,4 +10,4 @@ GOTOOLCHAIN=local go run ./cmd/deformation --smoke-test
 GOTOOLCHAIN=local go run ./cmd/deformation --addr :8080
 ```
 
-通过 `./build_benzhi_docker.sh deformation-network linux/amd64` 构建并运行容器自检。镜像不依赖外部服务，入口默认执行 `--smoke-test`；服务模式可覆盖参数为 `--addr :8080`。
+通过 `./build_benzhi_docker.sh deformation-network linux/amd64` 构建镜像；随后使用 `docker run --rm deformation-network --smoke-test` 执行无外部依赖的容器自检。镜像入口默认执行 `--smoke-test`；服务模式可覆盖参数为 `--addr :8080`。

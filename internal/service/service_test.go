@@ -50,3 +50,36 @@ func TestComputeWithdrawAndPublish(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestImportRejectsPointFromAnotherNetwork(t *testing.T) {
+	db, err := store.Open(filepath.Join(t.TempDir(), "service.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	service := New(db)
+	ctx := context.Background()
+	first, err := service.CreateNetwork(ctx, "first")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := service.CreateNetwork(ctx, "second")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, point := range []model.Point{
+		{ID: "first-fixed", NetworkID: first.ID, Role: model.PointFixed},
+		{ID: "second-estimated", NetworkID: second.ID, Role: model.PointEstimated},
+	} {
+		if _, err := service.AddPoint(ctx, point); err != nil {
+			t.Fatal(err)
+		}
+	}
+	period, err := service.CreatePeriod(ctx, first.ID, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.Import(ctx, model.Observation{PeriodID: period.ID, FromPoint: "first-fixed", ToPoint: "second-estimated", Distance: 12, Precision: 0.1}); err == nil {
+		t.Fatal("expected cross-network observation to be rejected")
+	}
+}
