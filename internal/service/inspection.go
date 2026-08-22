@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/rr173/task154-deformation/internal/adjustment"
-	"github.com/rr173/task154-deformation/internal/model"
+	"deformation/internal/adjustment"
+	"deformation/internal/model"
 )
 
 func (v *Service) InspectNetwork(ctx context.Context, networkID string) (model.NetworkInspection, error) {

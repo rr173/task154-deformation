@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/rr173/task154-deformation/internal/adjustment"
-	"github.com/rr173/task154-deformation/internal/model"
+	"deformation/internal/adjustment"
+	"deformation/internal/model"
 )
 
 func (v *Service) Recover(ctx context.Context) (model.RecoveryReport, error) {

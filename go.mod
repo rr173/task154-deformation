@@ -1,4 +1,4 @@
-module github.com/rr173/task154-deformation
+module deformation
 
 go 1.26.3
 

@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"github.com/rr173/task154-deformation/internal/model"
+	"deformation/internal/model"
 )
 
 func (v *Service) markOutliers(ctx context.Context, observations []model.Observation, issues []model.ObservationIssue) error {

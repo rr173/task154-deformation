@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/rr173/task154-deformation/internal/model"
+	"deformation/internal/model"
 )
 
 func (s *Store) Networks(ctx context.Context) ([]model.Network, error) {

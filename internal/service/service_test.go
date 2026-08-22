@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/rr173/task154-deformation/internal/model"
-	"github.com/rr173/task154-deformation/internal/store"
+	"deformation/internal/model"
+	"deformation/internal/store"
 	"path/filepath"
 	"testing"
 	"time"

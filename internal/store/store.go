@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/rr173/task154-deformation/internal/model"
+	"deformation/internal/model"
 	_ "modernc.org/sqlite"
 	"time"
 )

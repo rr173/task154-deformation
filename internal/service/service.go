@@ -6,9 +6,9 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/rr173/task154-deformation/internal/adjustment"
-	"github.com/rr173/task154-deformation/internal/model"
-	"github.com/rr173/task154-deformation/internal/store"
+	"deformation/internal/adjustment"
+	"deformation/internal/model"
+	"deformation/internal/store"
 	"sync"
 	"time"
 )

@@ -3,8 +3,8 @@ package httpapi
 import (
 	"encoding/json"
 	"errors"
-	"github.com/rr173/task154-deformation/internal/model"
-	"github.com/rr173/task154-deformation/internal/service"
+	"deformation/internal/model"
+	"deformation/internal/service"
 	"io"
 	"net/http"
 )

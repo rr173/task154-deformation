@@ -2,7 +2,7 @@ package adjustment
 
 import (
 	"errors"
-	"github.com/rr173/task154-deformation/internal/model"
+	"deformation/internal/model"
 	"math"
 )
 

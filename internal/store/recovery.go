@@ -2,7 +2,7 @@ package store
 
 import (
 	"context"
-	"github.com/rr173/task154-deformation/internal/model"
+	"deformation/internal/model"
 )
 
 func (s *Store) RecoverablePeriods(ctx context.Context) ([]model.Period, error) {

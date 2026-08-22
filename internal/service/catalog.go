@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/rr173/task154-deformation/internal/model"
+	"deformation/internal/model"
 )
 
 func (v *Service) CreateNetworkInput(ctx context.Context, input model.NetworkInput) (model.Network, error) {

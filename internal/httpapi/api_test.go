@@ -2,8 +2,8 @@ package httpapi
 
 import (
 	"bytes"
-	"github.com/rr173/task154-deformation/internal/service"
-	"github.com/rr173/task154-deformation/internal/store"
+	"deformation/internal/service"
+	"deformation/internal/store"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
