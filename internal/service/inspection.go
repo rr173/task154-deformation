@@ -178,17 +178,56 @@ func (v *Service) ValidatePublication(ctx context.Context, periodID string) erro
 	if err != nil {
 		return err
 	}
-	if len(observations) == 0 {
+	usable := usableObservations(observations)
+	if len(usable) == 0 {
 		return fmt.Errorf("period %s has no usable observations", periodID)
 	}
 	result, err := v.s.LatestResult(ctx, periodID)
 	if err != nil {
 		return fmt.Errorf("period %s has no computed result: %w", periodID, err)
 	}
+	if staleResult(result, observations) {
+		return fmt.Errorf("period %s result is stale; recompute after withdrawing observations before publishing", periodID)
+	}
 	if result.MaxResidual > meanPrecision(observations)*5 {
 		return fmt.Errorf("period %s residual exceeds publication tolerance", periodID)
 	}
 	return nil
+}
+
+// usableObservations returns the observations that remain available for
+// publication, i.e. have not been withdrawn. A period with no usable
+// observations may not publish, even when a previously computed result still
+// exists on disk.
+func usableObservations(observations []model.Observation) []model.Observation {
+	usable := make([]model.Observation, 0, len(observations))
+	for _, observation := range observations {
+		if observation.Status == model.ObservationWithdrawn {
+			continue
+		}
+		usable = append(usable, observation)
+	}
+	return usable
+}
+
+// staleResult reports whether a result can no longer be published because any
+// observation it was computed from has since been withdrawn. Withdrawing an
+// observation invalidates the result derived from it; the period must be
+// recomputed before the new result can be published.
+func staleResult(result model.Result, observations []model.Observation) bool {
+	if len(result.ObservationIDs) == 0 {
+		return false
+	}
+	statusByID := make(map[string]model.ObservationStatus, len(observations))
+	for _, observation := range observations {
+		statusByID[observation.ID] = observation.Status
+	}
+	for _, id := range result.ObservationIDs {
+		if statusByID[id] == model.ObservationWithdrawn {
+			return true
+		}
+	}
+	return false
 }
 
 func appendUnique(values []string, value string) []string {

@@ -150,7 +150,7 @@ func (v *Service) Compute(ctx context.Context, id string) (model.Result, error) 
 	if len(issues) > 0 {
 		_ = v.markOutliers(ctx, obs, issues)
 	}
-	r := model.Result{ID: uuid.NewString(), PeriodID: id, Version: len(prior) + 1, Points: adjustment.SortResults(out), CreatedAt: v.now().UTC(), ObservationCount: adjustment.ObservationCount(obs), MaxResidual: maxResidual}
+	r := model.Result{ID: uuid.NewString(), PeriodID: id, Version: len(prior) + 1, Points: adjustment.SortResults(out), CreatedAt: v.now().UTC(), ObservationCount: adjustment.ObservationCount(obs), ObservationIDs: includedObservationIDs(obs), MaxResidual: maxResidual}
 	if e = v.s.SaveResult(ctx, r); e != nil {
 		return r, e
 	}

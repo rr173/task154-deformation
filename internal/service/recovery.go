@@ -76,3 +76,16 @@ func meanPrecision(observations []model.Observation) float64 {
 	}
 	return total / float64(count)
 }
+
+// includedObservationIDs returns the ids of the observations Solve would use,
+// matching the IsIncluded() definition relied on by the adjustment solver so
+// the recorded snapshot describes the data the result was actually derived from.
+func includedObservationIDs(observations []model.Observation) []string {
+	ids := make([]string, 0, len(observations))
+	for _, observation := range observations {
+		if observation.Status.IsIncluded() {
+			ids = append(ids, observation.ID)
+		}
+	}
+	return ids
+}

@@ -74,7 +74,12 @@ type Result struct {
 	Points           []PointResult
 	CreatedAt        time.Time
 	ObservationCount int
-	MaxResidual      float64
+	// ObservationIDs records the observations (by id) that were included when
+	// this result was computed. Publication refuses to reuse a result whose
+	// observations have since been withdrawn, so a stale result can never be
+	// published after the data it was derived from is retracted.
+	ObservationIDs []string
+	MaxResidual    float64
 }
 type PointResult struct {
 	PointID         string
