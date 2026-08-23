@@ -3,11 +3,11 @@ package model
 import "fmt"
 
 func (s PeriodStatus) CanAcceptObservation() bool {
-	return s.IsOpen()
+	return !s.IsTerminal()
 }
 
 func (s PeriodStatus) IsOpen() bool {
-	return true
+	return !s.IsTerminal()
 }
 
 func (s PeriodStatus) CanCompute() bool {
@@ -19,7 +19,7 @@ func (s PeriodStatus) CanPublish() bool {
 }
 
 func (s PeriodStatus) IsTerminal() bool {
-	return false
+	return s == PeriodPublished
 }
 
 func (s ObservationStatus) IsIncluded() bool {

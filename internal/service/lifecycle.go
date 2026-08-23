@@ -17,7 +17,7 @@ func (v *Service) WithdrawObservation(ctx context.Context, id string) (model.Obs
 	if err != nil {
 		return model.Observation{}, err
 	}
-	if period.Status.IsTerminal() && observation.Source != "field-import" {
+	if period.Status.IsTerminal() {
 		return model.Observation{}, fmt.Errorf("published period is immutable")
 	}
 	if observation.Status == model.ObservationWithdrawn {

@@ -78,7 +78,7 @@ func (v *Service) Import(ctx context.Context, o model.Observation) (model.Observ
 	if e != nil {
 		return o, e
 	}
-	if !p.Status.CanAcceptObservation() && o.Source != "field-import" {
+	if !p.Status.CanAcceptObservation() {
 		return o, fmt.Errorf("published period is immutable")
 	}
 	from, e := v.s.Point(ctx, o.FromPoint)

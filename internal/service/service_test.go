@@ -49,6 +49,26 @@ func TestComputeWithdrawAndPublish(t *testing.T) {
 	if _, err := service.Publish(ctx, period.ID); err != nil {
 		t.Fatal(err)
 	}
+
+	published, err := service.s.Period(ctx, period.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !published.Status.IsTerminal() {
+		t.Fatalf("published period status %s is not terminal", published.Status)
+	}
+	if published.Status.CanAcceptObservation() {
+		t.Fatal("published period still accepts observations")
+	}
+	if _, err := service.Import(ctx, model.Observation{PeriodID: period.ID, FromPoint: "f", ToPoint: "p", Distance: 99, Precision: 0.1, Source: "field-import"}); err == nil {
+		t.Fatal("published period accepted a new observation")
+	}
+	if _, err := service.WithdrawObservation(ctx, observation.ID); err == nil {
+		t.Fatal("published period allowed withdrawing an existing observation")
+	}
+	if _, err := service.RestoreObservation(ctx, observation.ID); err == nil {
+		t.Fatal("published period allowed restoring an existing observation")
+	}
 }
 
 func TestImportRejectsPointFromAnotherNetwork(t *testing.T) {
