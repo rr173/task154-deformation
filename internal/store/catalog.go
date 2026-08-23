@@ -33,6 +33,10 @@ func (s *Store) Observation(ctx context.Context, id string) (model.Observation, 
 	return scanOne[model.Observation](ctx, s.db, `SELECT body FROM observations WHERE id=?`, id)
 }
 
+func (s *Store) ObservationByFingerprint(ctx context.Context, periodID, fingerprint string) (model.Observation, error) {
+	return scanOne[model.Observation](ctx, s.db, `SELECT body FROM observations WHERE period_id=? AND fingerprint=?`, periodID, fingerprint)
+}
+
 func (s *Store) LatestResult(ctx context.Context, periodID string) (model.Result, error) {
 	return scanOne[model.Result](ctx, s.db, `SELECT body FROM results WHERE period_id=? ORDER BY version DESC LIMIT 1`, periodID)
 }

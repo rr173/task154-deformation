@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"deformation/internal/adjustment"
@@ -92,13 +93,20 @@ func (v *Service) Import(ctx context.Context, o model.Observation) (model.Observ
 	if err := validateObservationForPeriod(p, from, to, o); err != nil {
 		return o, err
 	}
+	sum := sha256.Sum256([]byte(fmt.Sprintf("%s/%s/%.6f/%.6f", o.FromPoint, o.ToPoint, o.Distance, o.Precision)))
+	fingerprint := fmt.Sprintf("%x", sum)
+	if existing, err := v.s.ObservationByFingerprint(ctx, o.PeriodID, fingerprint); err == nil {
+		existing.Status = model.ObservationDuplicate
+		return existing, nil
+	} else if !errors.Is(err, sql.ErrNoRows) {
+		return o, fmt.Errorf("look up existing observation: %w", err)
+	}
 	if o.ID == "" {
 		o.ID = uuid.NewString()
 	}
 	o.Status = model.ObservationValid
 	o.CreatedAt = v.now().UTC()
-	sum := sha256.Sum256([]byte(fmt.Sprintf("%s/%s/%.6f/%.6f", o.FromPoint, o.ToPoint, o.Distance, o.Precision)))
-	e = v.s.SaveObservation(ctx, o, fmt.Sprintf("%x", sum))
+	e = v.s.SaveObservation(ctx, o, fingerprint)
 	if e != nil {
 		return o, e
 	}
