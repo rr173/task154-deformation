@@ -48,8 +48,8 @@ func validateObservationForPeriod(period model.Period, from, to model.Point, obs
 }
 
 func canCreatePeriod(network model.Network) error {
-	if network.Status == model.NetworkPublished {
-		return fmt.Errorf("network does not accept new observation periods")
+	if !network.Status.CanAddData() {
+		return fmt.Errorf("network %s is closed to new observation periods", network.Status)
 	}
 	return nil
 }

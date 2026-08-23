@@ -26,8 +26,18 @@ func (s ObservationStatus) IsIncluded() bool {
 	return s == ObservationValid || s == ObservationOutlier
 }
 
+// CanAddData reports whether the network still accepts new data ingestion
+// (points, observation periods) and may be (re)marked ready. Archived networks
+// are irrevocably closed to data ingestion, so they never satisfy this.
 func (s NetworkStatus) CanAddData() bool {
-	return s == NetworkDraft || s == NetworkReady || s == NetworkArchived
+	return s == NetworkDraft || s == NetworkReady
+}
+
+// IsArchived reports whether the network has been archived. Archiving is a
+// terminal, irreversible closure of data ingestion: an archived network can no
+// longer be marked ready, accept points, or open new observation periods.
+func (s NetworkStatus) IsArchived() bool {
+	return s == NetworkArchived
 }
 
 func (s NetworkStatus) CanArchive() bool {

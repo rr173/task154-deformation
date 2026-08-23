@@ -106,3 +106,69 @@ func TestArchiveNetworkBlocksNewPointsAndPeriods(t *testing.T) {
 		t.Fatal("archived network accepted a new period")
 	}
 }
+
+// ArchiveNetwork must be an irreversible closure of data ingestion: the
+// network must never return to a ready state, re-archive, or accept fresh
+// points, observation periods, or observations.
+func TestArchiveNetworkIsIrreversible(t *testing.T) {
+	db, err := store.Open(filepath.Join(t.TempDir(), "service.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	service := New(db)
+	ctx := context.Background()
+	network, err := service.CreateNetwork(ctx, "site")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.AddPoint(ctx, model.Point{ID: "f", NetworkID: network.ID, Role: model.PointFixed, X: 0}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.SetNetworkReady(ctx, network.ID); err != nil {
+		t.Fatal(err)
+	}
+	// Mark ready, open a period, then archive. Archiving from ready must succeed.
+	period, err := service.CreatePeriod(ctx, network.ID, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.Import(ctx, model.Observation{PeriodID: period.ID, FromPoint: "f", ToPoint: "f", Distance: 1, Precision: 0.1}); err == nil {
+		t.Fatal("self-observation should be rejected before archiving")
+	}
+	archived, err := service.ArchiveNetwork(ctx, network.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if archived.Status != model.NetworkArchived {
+		t.Fatalf("network status = %s, want archived", archived.Status)
+	}
+
+	// Re-marking ready must be refused — archive is terminal.
+	if _, err := service.SetNetworkReady(ctx, network.ID); err == nil {
+		t.Fatal("archived network was marked ready again")
+	}
+	// Re-archiving an already-archived network must also be refused.
+	if _, err := service.ArchiveNetwork(ctx, network.ID); err == nil {
+		t.Fatal("archived network was archived again")
+	}
+	// Fresh points, periods, and observations must all be refused.
+	if _, err := service.AddPoint(ctx, model.Point{ID: "p", NetworkID: network.ID, Role: model.PointEstimated}); err == nil {
+		t.Fatal("archived network accepted a new point")
+	}
+	if _, err := service.CreatePeriod(ctx, network.ID, time.Now()); err == nil {
+		t.Fatal("archived network accepted a new period")
+	}
+	if _, err := service.Import(ctx, model.Observation{PeriodID: period.ID, FromPoint: "f", ToPoint: "p", Distance: 12, Precision: 0.1}); err == nil {
+		t.Fatal("archived network accepted a new observation")
+	}
+
+	// The persisted status must remain archived — no path revived it.
+	persisted, err := service.Network(ctx, network.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if persisted.Status != model.NetworkArchived {
+		t.Fatalf("persisted network status = %s, want archived", persisted.Status)
+	}
+}

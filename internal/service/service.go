@@ -38,8 +38,8 @@ func (v *Service) AddPoint(ctx context.Context, p model.Point) (model.Point, err
 	if e != nil {
 		return p, e
 	}
-	if network.Status == model.NetworkPublished {
-		return p, fmt.Errorf("network does not accept new points")
+	if !network.Status.CanAddData() {
+		return p, fmt.Errorf("network %s is closed to new points", network.Status)
 	}
 	if err := validatePointCoordinates(p); err != nil {
 		return p, err
