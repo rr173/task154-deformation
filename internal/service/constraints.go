@@ -6,8 +6,6 @@ import (
 	"math"
 )
 
-const coordinateLimit = 100_000_000.0
-
 func validatePointCoordinates(point model.Point) error {
 	coordinates := []struct {
 		name  string
@@ -20,6 +18,9 @@ func validatePointCoordinates(point model.Point) error {
 	for _, coordinate := range coordinates {
 		if math.IsNaN(coordinate.value) || math.IsInf(coordinate.value, 0) {
 			return fmt.Errorf("point %s coordinate must be finite", coordinate.name)
+		}
+		if math.Abs(coordinate.value) > model.MaxCoordinateValue {
+			return fmt.Errorf("point %s coordinate %g exceeds supported range ±%g", coordinate.name, coordinate.value, model.MaxCoordinateValue)
 		}
 	}
 	return nil

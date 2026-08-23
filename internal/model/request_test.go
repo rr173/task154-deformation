@@ -36,3 +36,19 @@ func TestInputsRejectNonFiniteMeasurements(t *testing.T) {
 		t.Fatal("NaN observation distance was accepted")
 	}
 }
+
+func TestInputsRejectOutOfRangeCoordinates(t *testing.T) {
+	cases := []PointInput{
+		{ID: "p", Role: PointEstimated, X: MaxCoordinateValue + 1},
+		{ID: "p", Role: PointFixed, Y: -(MaxCoordinateValue + 1)},
+		{ID: "p", Role: PointEstimated, Z: 1e12},
+	}
+	for _, point := range cases {
+		if err := point.Validate(); err == nil {
+			t.Fatalf("out-of-range coordinate %v was accepted", point)
+		}
+	}
+	if err := (PointInput{ID: "p", Role: PointEstimated, X: MaxCoordinateValue}).Validate(); err != nil {
+		t.Fatalf("coordinate at the supported boundary was rejected: %v", err)
+	}
+}

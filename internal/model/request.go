@@ -22,6 +22,11 @@ type PointInput struct {
 	Label string    `json:"label"`
 }
 
+// MaxCoordinateValue bounds the supported engineering coordinate range.
+// Values whose absolute magnitude exceeds it are not real survey coordinates
+// and must be rejected at the request boundary.
+const MaxCoordinateValue = 100_000_000.0
+
 type PeriodInput struct {
 	ObservedAt time.Time `json:"observed_at"`
 	Note       string    `json:"note"`
@@ -58,6 +63,9 @@ func (v PointInput) Validate() error {
 		for _, coordinate := range []float64{v.X, v.Y, v.Z} {
 			if math.IsNaN(coordinate) || math.IsInf(coordinate, 0) {
 				return fmt.Errorf("point coordinates must be finite")
+			}
+			if math.Abs(coordinate) > MaxCoordinateValue {
+				return fmt.Errorf("point coordinate %g exceeds supported range ±%g", coordinate, MaxCoordinateValue)
 			}
 		}
 		return nil
