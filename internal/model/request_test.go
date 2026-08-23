@@ -35,4 +35,7 @@ func TestInputsRejectNonFiniteMeasurements(t *testing.T) {
 	if err := (ObservationInput{FromPoint: "a", ToPoint: "b", Distance: math.NaN(), Precision: 0.1}).Validate(); err == nil {
 		t.Fatal("NaN observation distance was accepted")
 	}
+	if err := (ObservationInput{FromPoint: "a", ToPoint: "b", Distance: math.Inf(1), Precision: 0.1, Source: "field-import"}).Validate(); err == nil {
+		t.Fatal("non-finite field-import distance was accepted")
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"deformation/internal/model"
 	"deformation/internal/store"
+	"math"
 	"path/filepath"
 	"testing"
 	"time"
@@ -81,6 +82,32 @@ func TestImportRejectsPointFromAnotherNetwork(t *testing.T) {
 	}
 	if _, err := service.Import(ctx, model.Observation{PeriodID: period.ID, FromPoint: "first-fixed", ToPoint: "second-estimated", Distance: 12, Precision: 0.1}); err == nil {
 		t.Fatal("expected cross-network observation to be rejected")
+	}
+}
+
+func TestImportRejectsNonFiniteFieldImportDistance(t *testing.T) {
+	db, err := store.Open(filepath.Join(t.TempDir(), "service.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer db.Close()
+	service := New(db)
+	ctx := context.Background()
+	network, err := service.CreateNetwork(ctx, "site")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, point := range []model.Point{{ID: "f", NetworkID: network.ID, Role: model.PointFixed}, {ID: "p", NetworkID: network.ID, Role: model.PointEstimated}} {
+		if _, err := service.AddPoint(ctx, point); err != nil {
+			t.Fatal(err)
+		}
+	}
+	period, err := service.CreatePeriod(ctx, network.ID, time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.Import(ctx, model.Observation{PeriodID: period.ID, FromPoint: "f", ToPoint: "p", Distance: math.NaN(), Precision: 0.1, Source: "field-import"}); err == nil {
+		t.Fatal("non-finite field-import distance was accepted")
 	}
 }
 

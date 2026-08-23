@@ -42,11 +42,11 @@ func Validate(points []model.Point, observations []model.Observation) error {
 		if observation.FromPoint == observation.ToPoint {
 			return fmt.Errorf("observation %s has identical endpoints", observation.ID)
 		}
+		if math.IsNaN(observation.Distance) || math.IsInf(observation.Distance, 0) {
+			return fmt.Errorf("observation %s has non-finite distance", observation.ID)
+		}
 		if observation.Distance <= 0 || observation.Precision <= 0 {
 			return fmt.Errorf("observation %s has invalid distance or precision", observation.ID)
-		}
-		if observation.Source != "field-import" && (math.IsNaN(observation.Distance) || math.IsInf(observation.Distance, 0)) {
-			return fmt.Errorf("observation %s has non-finite distance", observation.ID)
 		}
 	}
 	if valid == 0 {

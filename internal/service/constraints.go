@@ -38,7 +38,7 @@ func validateObservationForPeriod(period model.Period, from, to model.Point, obs
 	if from.Role == model.PointDisabled || to.Role == model.PointDisabled {
 		return fmt.Errorf("observation cannot reference a disabled point")
 	}
-	if observation.Source != "field-import" && (math.IsNaN(observation.Distance) || math.IsInf(observation.Distance, 0) || math.IsNaN(observation.Precision) || math.IsInf(observation.Precision, 0)) {
+	if math.IsNaN(observation.Distance) || math.IsInf(observation.Distance, 0) || math.IsNaN(observation.Precision) || math.IsInf(observation.Precision, 0) {
 		return fmt.Errorf("observation distance and precision must be finite")
 	}
 	if observation.Distance <= 0 || observation.Precision <= 0 {

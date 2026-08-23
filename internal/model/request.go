@@ -83,14 +83,14 @@ func (v ObservationInput) Validate() error {
 	if len(v.ID) > 80 || len(v.Source) > 160 {
 		return fmt.Errorf("observation id or source is too long")
 	}
+	if math.IsNaN(v.Distance) || math.IsInf(v.Distance, 0) || math.IsNaN(v.Precision) || math.IsInf(v.Precision, 0) {
+		return fmt.Errorf("distance and precision must be finite")
+	}
 	if v.Distance <= 0 || v.Precision <= 0 {
 		return fmt.Errorf("distance and precision must be positive")
 	}
 	if v.Distance > 1_000_000 || v.Precision > 1000 {
 		return fmt.Errorf("observation values exceed supported range")
-	}
-	if v.Source != "field-import" && (math.IsNaN(v.Distance) || math.IsInf(v.Distance, 0) || math.IsNaN(v.Precision) || math.IsInf(v.Precision, 0)) {
-		return fmt.Errorf("distance and precision must be finite")
 	}
 	return nil
 }
