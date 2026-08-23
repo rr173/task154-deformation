@@ -32,7 +32,7 @@ func validateObservationForPeriod(period model.Period, from, to model.Point, obs
 	if from.ID == to.ID {
 		return fmt.Errorf("observation must connect two distinct points")
 	}
-	if from.NetworkID != period.NetworkID && to.NetworkID != period.NetworkID {
+	if from.NetworkID != period.NetworkID || to.NetworkID != period.NetworkID {
 		return fmt.Errorf("observation points must belong to the period network")
 	}
 	if from.Role == model.PointDisabled || to.Role == model.PointDisabled {

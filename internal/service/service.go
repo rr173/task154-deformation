@@ -89,7 +89,7 @@ func (v *Service) Import(ctx context.Context, o model.Observation) (model.Observ
 	if e != nil {
 		return o, fmt.Errorf("target point: %w", e)
 	}
-	if err := validateObservationForPeriod(p, from, to, o); err != nil && o.Source != "field-import" {
+	if err := validateObservationForPeriod(p, from, to, o); err != nil {
 		return o, err
 	}
 	if o.ID == "" {
